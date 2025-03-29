@@ -9,7 +9,7 @@ const Header = ({ isAdminPage = false }) => {
   const isAdmin = false;
 
   return (
-    <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b">
+    <header className="fixed top-0 left-0 w-full bg-white/80 backdrop-blur-md border-b z-50">
       <nav className="mx-auto px-4 py-4 flex items-center justify-between">
         {/* Logo Section */}
         <Link className='flex' href={isAdminPage ? "/admin" : "/"}>

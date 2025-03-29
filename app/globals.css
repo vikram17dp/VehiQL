@@ -112,6 +112,7 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* globals.css */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -119,4 +120,22 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@layer utilities {
+  .gradient-title {
+    @apply bg-clip-text text-transparent font-extrabold tracking-tighter;
+    background-image: linear-gradient(to bottom right, var(--tw-gradient-from), var(--tw-gradient-to));
+    font-size: clamp(2.5rem, 8vw, 4.5rem); /* Responsive font scaling */
+    line-height: 1.1;
+  }
+}
+
+.dotted-background {
+  background-color: #16222c;
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.28) 1px,
+    transparent 1px
+  );
+  background-size: 30px 30px;
 }
