@@ -14,4 +14,4 @@ const AddCarPage = () => {
   )
 }
 
-export default AddCar
+export default AddCarPage
