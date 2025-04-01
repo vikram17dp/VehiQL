@@ -160,6 +160,18 @@ export async function AddCar({ carData, images }) {
     if (imageUrls.length === 0) {
       throw new Error("No valid images were uploaded");
     }
+    // Make sure price and mileage are valid numbers
+    if (isNaN(carData.price)  ) {
+      throw new Error("Price must be valid numbers");
+    }
+    if (isNaN(carData.mileage)  ) {
+      throw new Error("Mileage must be valid numbers");
+    }
+    // Validate fuel type (ensure it is selected)
+    if (!carData.fuelType || carData.fuelType.trim() === "") {
+      throw new Error("Fuel type is required");
+    }
+
     // Add the car to the database
     const car = await db.car.create({
       data: {
@@ -190,3 +202,4 @@ export async function AddCar({ carData, images }) {
     throw new Error("Error adding car:" + error.message);
   }
 }
+

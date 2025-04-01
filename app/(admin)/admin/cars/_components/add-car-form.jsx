@@ -231,7 +231,7 @@ useEffect(()=>{
 
   return (
     <div>
-      <Tabs defaultValue="ai" className="mt-6" value={activeTab} onValueChange={setActiveTab}>
+      <Tabs defaultValue="ai"  className="mt-6" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="manual">Manual Entry</TabsTrigger>
           <TabsTrigger value="ai">AI Upload</TabsTrigger>
