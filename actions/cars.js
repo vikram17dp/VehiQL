@@ -1,4 +1,5 @@
-"use server"
+"use server";
+import { setializedCarData } from "@/lib/helper";
 import { db } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase";
 import { auth } from "@clerk/nextjs/server";
@@ -161,10 +162,10 @@ export async function AddCar({ carData, images }) {
       throw new Error("No valid images were uploaded");
     }
     // Make sure price and mileage are valid numbers
-    if (isNaN(carData.price)  ) {
+    if (isNaN(carData.price)) {
       throw new Error("Price must be valid numbers");
     }
-    if (isNaN(carData.mileage)  ) {
+    if (isNaN(carData.mileage)) {
       throw new Error("Mileage must be valid numbers");
     }
     // Validate fuel type (ensure it is selected)
@@ -203,3 +204,144 @@ export async function AddCar({ carData, images }) {
   }
 }
 
+export async function getCars(search = "") {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unthorized");
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+    });
+    if (!user) throw new Error("User not Found");
+    let where = {};
+    if (search) {
+      where.OR = [
+        { make: { contains: search, mode: "insensitive" } },
+        { model: { contains: search, mode: "insensitive" } },
+        { color: { contains: search, mode: "insensitive" } },
+        { mileage: { contains: search, mode: "insensitive" } },
+        { price: { contains: search, mode: "insensitive" } },
+        { transmission: { contains: search, mode: "insensitive" } },
+        { year: { contains: search, mode: "insensitive" } },
+        { bodyType: { contains: search, mode: "insensitive" } },
+        { seats: { contains: search, mode: "insensitive" } },
+      ];
+    }
+    const cars = await db.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+    });
+    const serailzedCars = cars.map(setializedCarData);
+    return {
+      success: true,
+      data: serailzedCars,
+    };
+  } catch (error) {
+    console.error("Error fetching Cars", error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+export async function deleteCars(id) {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unthorized");
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+    });
+    if (!user) throw new Error("User not Found");
+    const car = await db.car.findUnique({
+      where: { id },
+      select: { images: true },
+    });
+    if (!car) {
+      return {
+        success: false,
+        error: "Car not found",
+      };
+    }
+    // Delete the car from the database
+    await db.car.delete({
+      where: { id },
+    });
+    try {
+      // Delete the images from Supabase storage
+      const cookieStore = cookies();
+      const supabase = createClient(cookieStore);
+
+       // Extract file paths from image URLs
+      const filePaths = car.images
+        .map((imageUrl) => {
+          const url = new URL(imageUrl);
+          const pathMatch = url.pathname.match(/\/car-images\/(.*)/);
+          return pathMatch ? pathMatch[1] : null;
+        })
+        .filter(Boolean);
+         // Delete files from storage if paths were extracted
+      if (filePaths.length > 0) {
+        const { error } = await supabase.storage
+          .from("car-images")
+          .remove(filePaths);
+
+        if (error) {
+          console.error("Error deleting images:", error);
+          // We continue even if image deletion fails
+        }
+      }
+    } catch (storageError) {
+      console.error("Error with storage operations:", storageError);
+      // Continue with the function even if storage operations fail
+    }
+     // Revalidate the cars list page
+     revalidatePath("/admin/cars");
+     return {
+      success: true,
+    };
+  } catch (error) {
+    console.error("Error deleting car:", error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+
+// Update car status or featured status
+export async function updateCarStatus(id, { status, featured }) {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const updateData = {};
+
+    if (status !== undefined) {
+      updateData.status = status;
+    }
+
+    if (featured !== undefined) {
+      updateData.featured = featured;
+    }
+
+    // Update the car
+    await db.car.update({
+      where: { id },
+      data: updateData,
+    });
+
+    // Revalidate the cars list page
+    revalidatePath("/admin/cars");
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error("Error updating car status:", error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
