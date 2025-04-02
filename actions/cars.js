@@ -226,7 +226,7 @@ export async function getCars(search = "") {
         { seats: { contains: search, mode: "insensitive" } },
       ];
     }
-    const cars = await db.findMany({
+    const cars = await db.car.findMany({
       where,
       orderBy: { createdAt: "desc" },
     });
