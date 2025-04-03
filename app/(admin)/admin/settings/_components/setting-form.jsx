@@ -1,7 +1,18 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, Clock1, Loader2, Save, Shield } from "lucide-react";
+import {
+ 
+  Clock,
+  Clock1,
+  Loader2,
+  Save,
+  Search,
+  Shield,
+  Users,
+  UserX,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import useFetch from "@/hooks/use-fetch";
 import {
   getDealershipInfo,
@@ -16,6 +27,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -84,7 +105,6 @@ const SettingsForm = () => {
     }
   }, [settingsData]);
 
-   
   const {
     loading: savingHours,
     fn: saveHours,
@@ -128,7 +148,13 @@ const SettingsForm = () => {
       toast.success("Working hours saved successfully");
       fetchDealershipInfo();
     }
-  }, [saveResult]);
+    if (updateRoleResult?.success) {
+        toast.success("User role updated successfully");
+        fetchUsers();
+        setConfirmAdminDialog(false);
+        setConfirmRemoveDialog(false);
+      }
+  }, [saveResult,updateRoleResult]);
   // Handle errors
   useEffect(() => {
     if (settingsError) {
@@ -147,6 +173,44 @@ const SettingsForm = () => {
       toast.error(`Failed to update user role: ${updateRoleError.message}`);
     }
   }, [settingsError, saveError, usersError, updateRoleError]);
+
+  // Filter users by search term
+  const filteredUsers = usersData?.success
+    ? usersData.data.filter(
+        (user) =>
+          user.name?.toLowerCase().includes(userSearch.toLowerCase()) ||
+          user.email.toLowerCase().includes(userSearch.toLowerCase())
+      )
+    : [];
+
+ // Make user admin
+const handleMakeAdmin = async (user) => {
+    if (
+        confirm(
+            `Are you sure you want to give admin privileges to ${
+                user.name || user.email
+            }? Admin users can manage all aspects of the dealership.`
+        )
+    ) {
+        await updateRole(user.id, "ADMIN");
+    }
+};
+
+// Remove admin privileges
+const handleRemoveAdmin = async (user) => {
+    if (!user) return;
+
+    const confirmDemotion = confirm(
+        `Are you sure you want to remove admin privileges from ${
+            user.name || user.email
+        }?`
+    );
+
+    if (user) {
+        await updateRole(user.id, "USER");
+    }
+};
+
 
 
   return (
@@ -242,26 +306,137 @@ const SettingsForm = () => {
                 })}
               </div>
               <div className="justify-end mt-6 flex">
-                <Button onClick={handleSaveHours}
-                disabled={savingHours}>
-                   {savingHours ? (
-                     <>
-                     <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                     Saving...
-                 </>
-                   ):(
+                <Button onClick={handleSaveHours} disabled={savingHours}>
+                  {savingHours ? (
                     <>
-                        <Save className="mr-2 h-4 w-4"/>
-                        Save Working Hours
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
                     </>
-                   )}
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save Working Hours
+                    </>
+                  )}
                 </Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
         <TabsContent value="admins" className="space-y-6 mt-6">
-          Change your password here.
+          <Card>
+            <CardHeader>
+              <CardTitle>Admin Users</CardTitle>
+              <CardDescription>
+                Manage users with admin privileges.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-6  relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                <Input
+                  type={"search"}
+                  placeholder="search users..."
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  className={"pl-9 w-full"}
+                />
+              </div>
+              {fetchingUsers ? (
+                <div className="py-12 flex justify-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                </div>
+              ) : usersData?.success && filteredUsers.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableCaption>A list of your recent invoices.</TableCaption>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>User</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsers.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                                {user.imageUrl ? (
+                                  <img
+                                    src={user.imageUrl}
+                                    alt={user.name || "User"}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <Users className="h-4 w-4 text-gray-500" />
+                                )}
+                              </div>
+                              <span>{user.name || "Unnamed User"}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>
+                            <Badge
+                              className={
+                                user.role === "ADMIN"
+                                  ? "bg-green-800"
+                                  : "bg-gray-800"
+                              }
+                            >
+                              {user.role}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {user.role === "ADMIN" ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-red-600"
+                                onClick={() => {
+                                  handleRemoveAdmin(user)
+                                }}
+                                disabled={updatingRole}
+                              >
+                                <UserX className="h-4 w-4 mr-2" />
+                                Remove Admin
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    handleMakeAdmin(user)
+                                }}
+                                disabled={updatingRole}
+                              >
+                                <Shield className="h-4 w-4 mr-2" />
+                                Make Admin
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="py-12 text-center">
+                  <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">
+                    No users found
+                  </h3>
+                  <p className="text-gray-500">
+                    {userSearch
+                      ? "No users match your search criteria"
+                      : "There are no users registered yet"}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
