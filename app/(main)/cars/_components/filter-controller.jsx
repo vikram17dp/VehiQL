@@ -57,6 +57,7 @@ export const CarFiltersControls = ({
             min={filters.priceRange.min}
             max={filters.priceRange.max}
             step={100}
+            className={'cursor-pointer'}
             value={priceRange}
             onValueChange={(value) => onFilterChange("priceRange", value)}
           />
