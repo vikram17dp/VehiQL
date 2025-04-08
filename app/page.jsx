@@ -26,6 +26,7 @@ export default async function Home() {
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
               Advanced AI Car Search and test drive from thousands of vehicles
             </p>
+            
           </div>
           {/* {section} */}
           <HomeSearch />

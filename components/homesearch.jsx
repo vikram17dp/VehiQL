@@ -133,6 +133,7 @@ const HomeSearch = () => {
                 color: isImageSearchActive ? "white" : "",
               }}
             />
+            
           </div>
           <Button type="submit" className="absolute right-2 rounded-full">
             Search
