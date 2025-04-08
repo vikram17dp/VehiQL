@@ -11,6 +11,14 @@ const inter = Inter({
 export const metadata = {
   title: "Vehiql",
   description: "Find Your Dream Vechicles",
+  icons: [
+    {
+      rel: "icon",
+      url: "/logo.png",
+      sizes: "256x256",
+      type: "image/png",
+    },
+  ],
 };
 
 export default function RootLayout({ children }) {

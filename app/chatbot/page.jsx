@@ -121,8 +121,8 @@ const CarChatbot = () => {
   }, [messages, isLoading]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 px-4 py-6">
-      <Card className="w-full max-w-4xl h-[90vh] mx-auto mt-20 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 px-4 py-8">
+      <Card className="w-full max-w-4xl h-[90vh] mx-auto mt-14 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col">
         <CardHeader className="border-b border-slate-700 p-6">
           <CardTitle className="flex items-center gap-3">
             <span className="text-4xl">🚗</span>
