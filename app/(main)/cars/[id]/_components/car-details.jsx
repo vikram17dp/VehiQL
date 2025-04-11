@@ -30,7 +30,7 @@ import Image from 'next/image';
 import { formatCurrency } from '@/lib/helper';
 import EmiCalculator from './emi-calculator';
 import { FaCarSide, FaGasPump, FaCogs, FaChair } from "react-icons/fa";
-
+import { format } from 'date-fns';
 
 const CarDetails = ({car,testDriveInfo}) => {
     const router = useRouter();

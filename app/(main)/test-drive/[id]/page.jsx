@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import React from "react";
-import TestDriveForm from "./_components/test-drive-form";
+import {TestDriveForm} from "./_components/test-drive-form";
 import { getCarById } from "@/actions/car-listing";
 
 export async function generateMetadata() {
@@ -17,8 +17,8 @@ const TestDrivePage = async ({ params }) => {
     notFound();
   }
   return(
-    <div className="container mx-auto px-4 py-12">
-   <h1 className="text-6xl mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-bold">
+    <div className="container mx-auto px-4 ">
+   <h1 className="text-2xl sm:text-6xl mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-bold">
   Book a Test Drive
 </h1>
 
