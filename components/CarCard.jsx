@@ -14,9 +14,9 @@ import useFetch from "@/hooks/use-fetch";
 const CarCard = ({ car }) => {
   const [isSaved, setIsSaved] = useState(car.wishlisted);
   const router = useRouter();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn,userId } = useAuth();
 
-   // Use the useFetch hook
+  // Use the useFetch hook
   const {
     loading: isToggling,
     fn: toggleSavedCarFn,
@@ -24,37 +24,47 @@ const CarCard = ({ car }) => {
     error: toggleError,
   } = useFetch(toggleSavedCar);
 
+  useEffect(() => {
+    setIsSaved(!!car.wishlisted);
+  }, [car.wishlisted, car.id]); 
   // Handle toggle result with useEffect
   useEffect(() => {
-    if (toggleResult?.success && toggleResult.saved !== isSaved) {
+    if (toggleResult?.success) {
       setIsSaved(toggleResult.saved);
       toast.success(toggleResult.message);
     }
-  }, [toggleResult, isSaved]);
+  }, [toggleResult]);
+  
 
-  // Handle errors with useEffect
+  // Handle errors
   useEffect(() => {
     if (toggleError) {
       toast.error("Failed to update favorites");
+      // Revert to previous state on error
+      setIsSaved(prev => !prev);
     }
   }, [toggleError]);
-
-  // Handle save/unsave car
-  const handleToogleSave = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (!isSignedIn) {
-      toast.error("Please sign in to save cars");
-      router.push("/sign-in");
-      return;
-    }
-
-    if (isToggling) return;
-
-    // Call the toggleSavedCar function using our useFetch hook
-    await toggleSavedCarFn(car.id);
-  };
+    // Handle save/unsave car
+  
+    const handleToggleSave = async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    
+      if (!isSignedIn) {
+        router.push("/sign-in");
+        return;
+      }
+    
+      if (isToggling) return;
+    
+      // Optimistically update the UI
+      setIsSaved(prev => !prev);
+      
+      try {
+        await toggleSavedCarFn(car.id);
+      } catch (error) {
+      }
+    };
   return (
     <Card className="overflow-hidden hover:shadow-lg transition group py-0 ">
       <div className="relative h-48 px-4 ">
@@ -72,26 +82,33 @@ const CarCard = ({ car }) => {
             <CarIcon className="h-12 w-12 text-gray-400" />
           </div>
         )}
-        <Button variant="ghost" size="icon"
-            className={`absolute top-2 right-2 bg-white/90 rounded-full p-1.5 ${
-                isSaved ? "text-red-500 hover:text-red-600"
-                :"text-gray-600 hover:text-gray-900"
-            }`}
-            onClick={handleToogleSave}
+        <Button
+          variant="ghost"
+          size="icon"
+          className={`absolute top-2 right-2 bg-white/90 rounded-full p-1.5 ${
+            isSaved
+              ? "text-red-500 hover:text-red-600"
+              : "text-gray-600 hover:text-gray-900"
+          }`}
+          onClick={handleToggleSave}
+          disabled={isToggling}
         >
-            {isToggling ? (
+          {isToggling ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <Heart className={isSaved ? "fill-current" : ""} size={20} />
           )}
         </Button>
       </div>
-      <CardContent className={'p-4'}>
+      <CardContent className={"p-4"}>
         <div className="flex flex-col mb-2">
-            <h3 className="text-lg font-bold line-clamp-1">{car.make}{car.model}</h3>
-            <span className="text-xl font-bold text-blue-600">
-                ${car.price.toLocaleString()}
-            </span>
+          <h3 className="text-lg font-bold line-clamp-1">
+            {car.make}
+            {car.model}
+          </h3>
+          <span className="text-xl font-bold text-blue-600">
+            ${car.price.toLocaleString()}
+          </span>
         </div>
         <div className="text-gray-600 mb-2 flex items-center">
           <span>{car.year}</span>
@@ -112,7 +129,12 @@ const CarCard = ({ car }) => {
           </Badge>
         </div>
         <div>
-            <Button className='flex-1' onClick={()=>router.push(`/cars/${car.id}`)}>View Car</Button>
+          <Button
+            className="flex-1"
+            onClick={() => router.push(`/cars/${car.id}`)}
+          >
+            View Car
+          </Button>
         </div>
       </CardContent>
     </Card>

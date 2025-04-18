@@ -34,8 +34,9 @@ const clerk =  clerkMiddleware(async(auth,req)=>{
         return redirectToSignin();
     }
 });
-// Chain middlewares - ArcJet runs first, then Clerk
-export default createMiddleware(aj, clerk);
+const middleware = createMiddleware(aj, clerk);
+
+export default middleware;
 export const config = {
   matcher: [
 
